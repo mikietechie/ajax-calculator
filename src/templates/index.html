@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculator</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body class="bg-light">
+    <main class="container">
+      <div class="row border-rounded">
+        <div class="card col-lg-4 mx-auto bg-info my-5 py-5 px-5">
+          <div class="row mb-3 bg-white">
+            <div class="col-12 p-3">
+              <form>
+                <input class="form-control mb-3" type="text" />
+              </form>
+              <output class="form-control"></output>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">7</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">8</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">9</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">+</button>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">4</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">5</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">6</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">-</button>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">1</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">2</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">3</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">*</button>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">0</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">(</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">)</button>
+            </div>
+            <div class="col-3">
+              <button class="btn btn-primary w-100 input-btn">/</button>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-8">
+              <button class="btn btn-primary w-100 equal-btn">=</button>
+            </div>
+            <div class="col-4">
+              <button class="btn btn-primary w-100 backspace-btn">
+                &#x232B;
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 my-5">
+          <h2>History</h2>
+          <ul></ul>
+        </div>
+      </div>
+    </main>
+  </body>
+  <script>
+    const $list = document.querySelector("ul");
+    const $input = document.querySelector("input");
+    const $output = document.querySelector("output");
+    const $equalBtn = document.querySelector("button.equal-btn");
+    const $backspaceBtn = document.querySelector("button.backspace-btn");
+    const setOutputText = (val) => {
+      $output.innerText = val;
+    };
+    const loadHistory = () => {
+      fetch("http://127.0.0.1:8000/calculations", {
+        headers: {
+          accept: "application/json",
+        },
+        method: "GET",
+      }).then((res) => {
+        res.json().then((data) => {
+          while ($list.firstChild) {
+            $list.removeChild($list.firstChild);
+          }
+          data.forEach((item) => {
+            const $listItem = document.createElement("li");
+            $listItem.addEventListener("click", () => {
+              $input.value = item.statement;
+              setOutputText(item.ans);
+            });
+            $listItem.innerText = item.statement;
+            $list.appendChild($listItem);
+          });
+        });
+      });
+    };
+    const submit = () => {
+      fetch("http://127.0.0.1:8000/calculate", {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          statement: $input.value,
+        }),
+      }).then((res) => {
+        res.json().then((data) => {
+          setOutputText(data.ans);
+          loadHistory();
+        });
+      });
+    };
+    document.querySelectorAll("button.input-btn").forEach(($btn) => {
+      $btn.addEventListener("click", () => {
+        $input.value = $input.value + $btn.innerText;
+      });
+    });
+    $backspaceBtn.addEventListener("click", () => {
+      if ($input.value) {
+        $input.value = $input.value.slice(0, -1);
+      }
+    });
+    $equalBtn.addEventListener("click", submit);
+    document.querySelector("form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      submit();
+      return false;
+    });
+    document.addEventListener("DOMContentLoaded", () => {
+      loadHistory();
+    });
+  </script>
+</html>
