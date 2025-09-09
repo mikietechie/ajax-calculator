@@ -107,37 +107,39 @@
       $output.innerText = val;
     };
     const loadHistory = () => {
-      fetch("http://127.0.0.1:8000/calculations", {
+      fetch("/calculations", {
         headers: {
           accept: "application/json",
         },
         method: "GET",
       }).then((res) => {
-        res.json().then((data) => {
+        res.json().then((calculations) => {
           while ($list.firstChild) {
             $list.removeChild($list.firstChild);
           }
-          data.forEach((item) => {
+          calculations.forEach((calculation) => {
             const $listItem = document.createElement("li");
             $listItem.addEventListener("click", () => {
-              $input.value = item.statement;
-              setOutputText(item.ans);
+              $input.value = calculation.statement;
+              setOutputText(calculation.ans);
             });
-            $listItem.innerText = item.statement;
+            $listItem.innerText = `${calculation.statement} = ${calculation.ans}`;
             $list.appendChild($listItem);
           });
         });
       });
     };
     const submit = () => {
-      fetch("http://127.0.0.1:8000/calculate", {
+      const statement = $input.value;
+      if (!statement) return;
+      fetch("/calculate", {
         method: "POST",
         headers: {
           accept: "application/json",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          statement: $input.value,
+          statement,
         }),
       }).then((res) => {
         res.json().then((data) => {
